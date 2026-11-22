@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "FB Interaction Radar",
+  "version": "0.1.0",
+  "description": "Kiểm tra tương tác React, Comment, Share công khai trên Facebook theo ma trận đối tượng và trang.",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "unlimitedStorage",
+    "scripting",
+    "tabs",
+    "declarativeNetRequestWithHostAccess",
+    "debugger"
+  ],
+  "host_permissions": [
+    "https://*.facebook.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background/background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/sidepanel.html"
+  },
+  "action": {
+    "default_title": "Mở FB Interaction Radar"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/core/graphql_parser.js"],
+      "matches": ["https://*.facebook.com/*"]
+    }
+  ]
+}

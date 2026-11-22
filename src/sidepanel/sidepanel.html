@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FB Interaction Radar</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <path d="M12 3v4M12 12l5.5-3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+        <div>
+          <h1 class="brand-title">Interaction Radar</h1>
+          <p class="brand-sub">Đối soát tương tác trên phiên Facebook của bạn</p>
+        </div>
+      </div>
+      <span id="matrixBadge" class="matrix-pill">Chưa đủ đầu vào</span>
+    </header>
+
+    <main class="workspace">
+      <!-- Chọn chế độ A / B -->
+      <section class="panel" aria-label="Chế độ nguồn dữ liệu">
+        <div class="segmented" role="tablist" aria-label="Chọn hướng quét">
+          <button type="button" class="seg-btn is-active" data-mode="mode_a" role="tab" aria-selected="true">
+            Hướng A · Theo Bài viết
+          </button>
+          <button type="button" class="seg-btn" data-mode="mode_b" role="tab" aria-selected="false">
+            Hướng B · Theo Trang (Page)
+          </button>
+        </div>
+
+        <div class="field-head">
+          <label for="sourceInput" id="sourceLabel" class="field-label">
+            Link bài viết Facebook (mỗi dòng 1 link)
+          </label>
+          <button type="button" id="useCurrentTabBtn" class="ghost-btn">
+            Lấy tab Facebook hiện tại
+          </button>
+        </div>
+        <textarea
+          id="sourceInput"
+          class="text-area"
+          rows="3"
+          placeholder="Dán 1 hoặc nhiều link bài viết Facebook (mỗi dòng 1 link)..."
+        ></textarea>
+
+        <div id="modeBOptions" class="inline-options" hidden>
+          <label class="inline-field">
+            <span>Số bài mới nhất / Page</span>
+            <input id="postsPerPageInput" type="number" min="1" max="30" value="5" />
+          </label>
+          <label class="inline-field">
+            <span>Độ trễ an toàn (giây)</span>
+            <input id="delaySecondsInput" type="number" min="2" max="15" value="4" />
+          </label>
+        </div>
+
+        <div id="sourcePreview" class="chip-list" aria-live="polite"></div>
+      </section>
+
+      <!-- Danh sách đối tượng cần kiểm tra -->
+      <section class="panel" aria-label="Đối tượng cần tìm">
+        <div class="field-head">
+          <label for="targetInput" class="field-label">
+            Người dùng hoặc Page cần kiểm tra (1 hoặc nhiều dòng)
+          </label>
+          <button type="button" id="useCurrentTargetTabBtn" class="ghost-btn">
+            Lấy tab Facebook hiện tại
+          </button>
+        </div>
+        <span class="hint-text">Ưu tiên link profile / ID để không trùng tên</span>
+        <textarea
+          id="targetInput"
+          class="text-area"
+          rows="4"
+          placeholder="Ví dụ:&#10;https://www.facebook.com/zuck&#10;https://www.facebook.com/profile.php?id=1000123456789&#10;Nguyễn Văn A"
+        ></textarea>
+        <div id="targetPreview" class="chip-list" aria-live="polite"></div>
+      </section>
+
+      <!-- Thanh hành động -->
+      <section class="action-bar">
+        <button type="button" id="startScanBtn" class="primary-btn" disabled>
+          Bắt đầu kiểm tra ma trận
+        </button>
+        <button type="button" id="pauseScanBtn" class="ghost-btn" hidden>
+          Tạm dừng
+        </button>
+        <button type="button" id="stopScanBtn" class="ghost-btn" hidden>
+          Dừng
+        </button>
+        <button type="button" id="clearCacheBtn" class="ghost-btn">
+          Xóa cache (<span id="cacheCount">0</span>)
+        </button>
+      </section>
+
+      <section class="panel" aria-label="Cách thức quét nền">
+        <div class="field-head">
+          <span class="field-label">Chế độ chạy nền</span>
+          <span id="docIdBadge" class="hint-text">Đã học 0/3 doc_id</span>
+        </div>
+        <div class="segmented" role="radiogroup" aria-label="Chọn cách chạy ngầm">
+          <button type="button" class="exec-btn is-active" data-exec="bg_tab" aria-checked="true">
+            Option 1 · Tab nền ẩn (Tự đóng)
+          </button>
+          <button type="button" class="exec-btn" data-exec="headless_fetch" aria-checked="false">
+            Option 2 · Không mở tab (Fetch)
+          </button>
+        </div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="autoFallbackInput" checked />
+          <span>Nếu Option 2 thiếu dữ liệu/chưa học doc_id, tự chuyển sang Tab nền ẩn</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="forceRescanInput" />
+          <span>Quét lại từ Facebook (bỏ qua dữ liệu đã cache)</span>
+        </label>
+      </section>
+
+      <div id="statusNotice" class="notice" role="status" aria-live="polite">
+        Sẵn sàng. Nhập ít nhất 1 nguồn và 1 đối tượng để xem cấu hình ma trận.
+      </div>
+
+      <!-- Khung kết quả Ma trận -->
+      <section class="panel" aria-label="Bảng kết quả ma trận">
+        <div class="field-head">
+          <h2 class="section-title">Kết quả đối soát</h2>
+          <span id="resultSummary" class="hint-text">Chưa có phiên quét</span>
+        </div>
+        <div id="exportBar" class="export-bar" hidden>
+          <button type="button" id="copySummaryBtn" class="ghost-btn">Copy tóm tắt</button>
+          <button type="button" id="exportCsvBtn" class="ghost-btn">Xuất CSV</button>
+          <button type="button" id="exportJsonBtn" class="ghost-btn">Xuất JSON</button>
+        </div>
+        <div id="matrixContainer" class="matrix-empty">
+          Bảng ma trận Đối tượng × Bài viết sẽ hiển thị tại đây sau khi quét.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
